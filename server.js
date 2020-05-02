@@ -107,8 +107,7 @@ router.route('/review')
         review.title = req.body.title;
         review.username = req.body.username;
         review.rating = req.body.rating;
-        // save the review
-        if (Review.findOne({title: review.movieName} && {username: review.username}) != null) {
+        if (Review.findOne({title: review.title} && {username: review.username}) != null) {
             review.save(function (err) {
                 if (err) {
                     // duplicate entry
@@ -118,18 +117,6 @@ router.route('/review')
                         return res.send(err);
                 }else res.json({success: true, message: 'Created'});
             });
-        }
-    })
-    .put(authJwtController.isAuthenticated, function (req, res) {
-        var qmovie = req.query.title;
-        var qreviewer = req.query.username;
-
-        if (Review.findOne({title: qmovie} && {username: qreviewer}) != null) {
-            var newVals = { $set: req.body };
-            Review.updateOne({title: qmovie} && {username: qreviewer}, newVals, function(err, obj) {
-                if (err) res.send(err);
-                else res.json({success: true, message: 'Updated'});
-            })
         }
     })
 
