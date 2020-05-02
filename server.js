@@ -18,24 +18,6 @@ app.use(passport.initialize());
 
 var router = express.Router();
 
-function getJSONObject(req, message, status) {
-    var json = {
-        message: message,
-        status: status,
-        headers : "No Headers",
-        key: process.env.SECRET_KEY,
-        body : "No Body"
-    };
-
-    if (req.body != null) {
-        json.body = req.body;
-    }
-    if (req.headers != null) {
-        json.headers = req.headers;
-    }
-
-    return json;
-}
 
 router.route('/postjwt')
     .post(authJwtController.isAuthenticated, function (req, res) {
@@ -118,7 +100,45 @@ router.post('/signin', function(req, res) {
     });
 });
 
+router.route('/review')
+    .post(authJwtController.isAuthenticated, function (req, res) {
+        console.log(req.body);
+        var review = new Review();
+        review.title = req.body.title;
+        review.username = req.body.username;
+        review.rating = req.body.rating;
+        // save the review
+        if (Review.findOne({title: review.movieName} && {username: review.username}) != null) {
+            review.save(function (err) {
+                if (err) {
+                    // duplicate entry
+                    if (err.code == 11000)
+                        res.json({success: false, message: 'Already reviewed'});
+                    else
+                        return res.send(err);
+                }else res.json({success: true, message: 'Created'});
+            });
+        }
+    })
+    .put(authJwtController.isAuthenticated, function (req, res) {
+        var qmovie = req.query.title;
+        var qreviewer = req.query.username;
 
+        if (Review.findOne({title: qmovie} && {username: qreviewer}) != null) {
+            var newVals = { $set: req.body };
+            Review.updateOne({title: qmovie} && {username: qreviewer}, newVals, function(err, obj) {
+                if (err) res.send(err);
+                else res.json({success: true, message: 'Updated'});
+            })
+        }
+    })
+
+    .get(authJwtController.isAuthenticated, function (req, res) {
+        Review.find(function (err, review) {
+            if(err) res.send(err);
+            res.json(review);
+        })
+    });
 
 router.route('/Movies')
     .get(authJwtController.isAuthenticated, function (req, res) {
